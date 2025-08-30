@@ -1,6 +1,7 @@
 # Audio Processing Studio 
 
 Author: Alistair King
+
 Email: [aking1@seas.upenn.edu](mailto:aking1@seas.upenn.edu)
 
 ## Description
