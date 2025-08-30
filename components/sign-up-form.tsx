@@ -40,15 +40,24 @@ export function SignUpForm({
     }
 
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/protected`,
-        },
       });
+      
       if (error) throw error;
-      router.push("/auth/sign-up-success");
+      
+      // If email confirmation is disabled, user will be automatically signed in
+      if (data.user && !data.user.email_confirmed_at) {
+        // Email confirmation required - show success page
+        router.push("/auth/sign-up-success");
+      } else if (data.user && data.session) {
+        // User is automatically signed in - redirect to dashboard
+        router.push("/dashboard");
+      } else {
+        // Fallback - show success page
+        router.push("/auth/sign-up-success");
+      }
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");
     } finally {
