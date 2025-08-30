@@ -4,6 +4,18 @@ Author: Alistair King
 
 ## Description
 
+## Features
+
+## Assement Criteria
+
+| Included| Criteria | Details |
+|----------|--------------------|---------|
+| ✅ | Components | The project is built with React and Next.js, with a component-based architecture. Components are located in the `components/` directory. |
+| ✅ | Animations |  |
+| ✅ | User registration / login / logout functionality | User authentication is implemented using Supabase Auth. The UI for sign-up, login, and password management is in `app/auth/`. |
+| ✅ | Linking together a frontend framework with a backend framework (eg: React with Node) | Next.js is used as a full-stack framework. It renders React components on the server (Server Components) and on the client. |
+| ✅ | Integration with database | The application uses Supabase's PostgreSQL database and storage buckets to store user data and audio projects. The files in `lib/supabase/` manage database interactions.  |
+| ✅ | Classes and objects | While the project predominantly uses a functional programming style with React Hooks, it utilizes custom classes and objects such as the `PitchShifter` class which is used for real-time audio processing. |
 
 ## Future Directions
 
@@ -11,4 +23,4 @@ Author: Alistair King
 
 ## Credits
 - This website was built on top of the [Next.js and Supabase Starter Kit](https://vercel.com/templates/authentication/supabase) by Vercel.
-- The audio processing techniques used in this project were built on top of my original [Audio Processing Studio](https://github.com/alistairking/audio-processing-studio). I wrote that project for my final project for my CS class in senior year of high school; it was a barebones version of this project, without the ability to login, save projects, etc.
+- The audio processing techniques used in this project were built on top of an original audio processing project I wrote as my final project for my CS class in senior year of high school. That project was a barebones version of this. Users could only upload files, but could not login and save projects. It lacked any animation or visualization. The code for this can be found in the `_old_audio_processor/` directory in older versions of the project.
