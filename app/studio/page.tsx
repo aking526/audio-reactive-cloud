@@ -5,11 +5,6 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { motion } from "framer-motion";
 import AudioUploader from "@/components/studio/AudioUploader";
 import AudioPlayer from "@/components/studio/AudioPlayer";
-// import { VisualizationScene } from '@/components/visualization/VisualizationScene';
-// import { VisualizationControls } from '@/components/visualization/VisualizationControls';
-// import { AudioAnalyzer } from '@/components/visualization/AudioAnalyzer';
-// import { AudioFeatures } from '@/components/visualization/types';
-// import { VisualizationSettings, StudioVisualizationState } from '@/components/visualization/types';
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, AlertCircle } from "lucide-react";
 import Link from "next/link";
@@ -17,24 +12,11 @@ import { AudioProject, audioProjectsService } from '@/lib/supabase/audio-project
 import { UnsavedChangesDialog } from '@/components/studio/UnsavedChangesDialog';
 import * as Tone from 'tone';
 
-/*
-const defaultSettings: VisualizationSettings = {
-  sensitivity: 1,
-  smoothing: 0.8,
-  colorScheme: 'rainbow',
-  quality: 'high',
-  deformationIntensity: 0.7,
-  particleIntensity: 0.5,
-  glowIntensity: 0.6
-};
-*/
-
 export default function StudioPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [isExiting, setIsExiting] = useState(false);
   const [audioFile, setAudioFile] = useState<File | null>(null);
-  // const [audioFeatures, setAudioFeatures] = useState<AudioFeatures | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [loadedProject, setLoadedProject] = useState<AudioProject | null>(null);
   const [loadingProject, setLoadingProject] = useState(false);
@@ -43,14 +25,6 @@ export default function StudioPage() {
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
   const [pendingNavigation, setPendingNavigation] = useState<string | null>(null);
   const [triggerSaveDialog, setTriggerSaveDialog] = useState(false);
-/*
-  const [visualizationState, setVisualizationState] = useState<StudioVisualizationState>({
-    currentVisualization: 'sphere',
-    audioFeatures: null,
-    settings: defaultSettings,
-    isActive: false
-  });
-  */
 
   // Audio context refs (these will be passed to AudioPlayer and AudioAnalyzer)
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -62,30 +36,13 @@ export default function StudioPage() {
 
   const handleAudioLoaded = useCallback((buffer: Tone.ToneAudioBuffer | null, file: File) => {
     setAudioFile(file);
-    // setVisualizationState(prev => ({ ...prev, isActive: true }));
   }, []);
-/*
-  const handleAudioFeaturesUpdate = useCallback((features: AudioFeatures) => {
-    setAudioFeatures(features);
-    setVisualizationState(prev => ({ ...prev, audioFeatures: features }));
-  }, []);
-
-
-
-  const handleSettingsChange = useCallback((newSettings: Partial<VisualizationSettings>) => {
-    setVisualizationState(prev => ({
-      ...prev,
-      settings: { ...prev.settings, ...newSettings }
-    }));
-  }, []);
-*/
   const handleReset = useCallback(() => {
     setAudioFile(null);
     setLoadedProject(null);
     setLoadError(null);
     loadedProjectIdRef.current = null;
     setHasUnsavedChanges(false);
-    // setVisualizationState(prev => ({ ...prev, isActive: false, audioFeatures: null }));
     router.replace('/studio');
   }, [router]);
 
@@ -204,7 +161,6 @@ export default function StudioPage() {
 
       setLoadedProject(project);
       setAudioFile(file);
-      // setVisualizationState(prev => ({ ...prev, isActive: true }));
     } catch (err) {
       setLoadError(err instanceof Error ? err.message : 'Failed to load project');
       // Reset the loaded project ref on error
@@ -239,11 +195,11 @@ export default function StudioPage() {
 
           <h1 className="text-4xl font-bold text-foreground mb-2">Audio Studio</h1>
           <p className="text-muted-foreground">
-            {loadedProject ? `Editing: ${loadedProject.project_name}` : 'Create, process, and visualize your audio'}
+            {loadedProject ? `Editing: ${loadedProject.project_name}` : 'Create and process your audio'}
           </p>
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-6">
           {/* Left Column - Audio Controls */}
           <div className="lg:col-span-1 space-y-6">
             {loadingProject ? (
@@ -283,59 +239,11 @@ export default function StudioPage() {
                   onProjectUpdated={handleProjectUpdated}
                   onProjectCopied={handleProjectCopied}
                 />
-{/*
-                <VisualizationControls
-                  settings={visualizationState.settings}
-                  onSettingsChange={handleSettingsChange}
-                  isActive={visualizationState.isActive}
-                />
-*/}
               </div>
             )}
           </div>
 
-          {/* Right Column - 3D Visualization */}
-          {/*
-          <div className="lg:col-span-2">
-            <div className="bg-card rounded-lg border p-4">
-              <h2 className="text-xl font-semibold mb-4">3D Audio Visualization</h2>
-
-              {visualizationState.isActive ? (
-                <div className="relative w-full h-96 lg:h-[600px]">
-                  {audioFeatures ? (
-                    <VisualizationScene
-                      audioFeatures={audioFeatures}
-                      currentVisualization={visualizationState.currentVisualization}
-                      settings={visualizationState.settings}
-                      className="w-full h-full rounded-lg overflow-hidden"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-muted rounded-lg">
-                      <div className="text-center text-muted-foreground">
-                        <p className="text-lg mb-2">Initializing visualization...</p>
-                        <p className="text-sm">Start playing audio to see the visualization</p>
-                      </div>
-                    </div>
-                  )}
-
-                  <AudioAnalyzer
-                    audioContext={audioContextRef.current}
-                    analyserInputNode={analyserInputNodeRef.current}
-                    isPlaying={isPlaying}
-                    onFeaturesUpdate={handleAudioFeaturesUpdate}
-                  />
-                </div>
-              ) : (
-                <div className="w-full h-96 lg:h-[600px] bg-muted rounded-lg flex items-center justify-center">
-                  <div className="text-center text-muted-foreground">
-                    <p className="text-lg mb-2">No audio loaded</p>
-                    <p className="text-sm">Upload an audio file to see the visualization</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-          */}
+          {/* Right Column removed (visualization was removed) */}
         </div>
       </div>
       

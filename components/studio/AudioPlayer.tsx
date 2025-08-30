@@ -9,6 +9,7 @@ import {
   Music, 
   Settings,
   RotateCcw,
+  Undo2,
   Save
 } from "lucide-react";
 import { SaveProjectDialog } from './SaveProjectDialog';
@@ -540,6 +541,17 @@ const AudioPlayer = ({
     setBassBoostAmount(6);
   };
 
+  const resetToProjectDefaults = () => {
+    if (!originalEffectsSettings) return;
+    setBassBoostEnabled(originalEffectsSettings.bass_boost?.enabled ?? false);
+    setBassBoostAmount(originalEffectsSettings.bass_boost?.amount ?? 6);
+    setSpeedControlEnabled(originalEffectsSettings.speed_control?.enabled ?? false);
+    setSpeedValue(originalEffectsSettings.speed_control?.speed ?? 1.0);
+    setPitchShiftEnabled(originalEffectsSettings.pitch_shift?.enabled ?? false);
+    setPitchValue(originalEffectsSettings.pitch_shift?.semitones ?? 0);
+    setVolume(originalEffectsSettings.volume?.level ?? 0.75);
+  };
+
   const getCurrentEffectsSettings = (): AudioEffectsSettings => {
     return {
       bass_boost: {
@@ -643,7 +655,7 @@ const AudioPlayer = ({
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto space-y-6">
+    <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Main Player Card */}
       <Card>
         <CardHeader>
@@ -723,14 +735,28 @@ const AudioPlayer = ({
             <Settings className="h-5 w-5" />
             Audio Effects
           </CardTitle>
-          <Button
-            onClick={resetAllEffects}
-            variant="outline"
-            size="sm"
-          >
-            <RotateCcw className="h-4 w-4 mr-2" />
-            Reset All
-          </Button>
+          <div className="flex items-center gap-2">
+            {loadedProject && (
+              <Button
+                onClick={resetToProjectDefaults}
+                variant="outline"
+                size="sm"
+                disabled={!hasUnsavedChanges}
+                className={`${!hasUnsavedChanges ? "opacity-50 cursor-not-allowed" : ""}`}
+              >
+                <Undo2 className="h-4 w-4 mr-2" />
+                Reset to project defaults
+              </Button>
+            )}
+            <Button
+              onClick={resetAllEffects}
+              variant="outline"
+              size="sm"
+            >
+              <RotateCcw className="h-4 w-4 mr-2" />
+              Reset All
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Pitch Shift Control */}

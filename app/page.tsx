@@ -184,13 +184,22 @@ export default function Home() {
         transition={{ duration: 0.8, delay: 0.6 }}
         className="fixed bottom-8 right-8 z-20"
       >
-        <Button
-          onClick={() => handleNavigate("/auth/login")}
-          size="lg"
-          className="bg-primary/90 hover:bg-primary backdrop-blur-sm border border-primary/30 shadow-lg px-8 py-3 text-lg font-semibold"
-        >
-          Get Started
-        </Button>
+        <motion.div
+          whileHover={{ scale: 1.04, y: -1 }}
+          whileTap={{ scale: 0.98 }}
+          animate={{ scale: [1, 1.02, 1] }}
+          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+          className="relative"
+       >
+          <Button
+            onClick={() => handleNavigate("/auth/login")}
+            size="lg"
+            className="relative overflow-hidden group bg-primary/90 hover:bg-primary backdrop-blur-sm border border-primary/30 shadow-lg px-8 py-3 text-lg font-semibold"
+          >
+            <span className="relative z-10">Get Started</span>
+            <span className="pointer-events-none absolute inset-y-0 -left-full w-1/2 bg-gradient-to-r from-transparent via-white/20 to-transparent transform group-hover:translate-x-[300%] transition-transform duration-700 ease-out" />
+          </Button>
+        </motion.div>
       </motion.div>
     </motion.main>
   );
