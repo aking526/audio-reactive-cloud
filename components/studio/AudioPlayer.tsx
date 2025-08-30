@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   Play, 
   Pause, 
@@ -31,6 +32,8 @@ interface AudioPlayerProps {
   onSaveCompleteWithNavigation?: (projectId: string) => void;
   onProjectUpdated?: (projectId: string) => void;
   onProjectCopied?: (projectId: string) => void;
+  onSaveComplete: (projectId: string) => void;
+  onSaveDialogClose?: () => void;
 }
 
 // Pitch Shifter class that handles the audio processing for pitch shifting
@@ -125,11 +128,14 @@ const AudioPlayer = ({
   triggerSaveDialog,
   onSaveCompleteWithNavigation,
   onProjectUpdated,
-  onProjectCopied
+  onProjectCopied,
+  onSaveComplete,
+  onSaveDialogClose
 }: AudioPlayerProps) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const localAudioContextRef = useRef<AudioContext | null>(null);
   const localSourceNodeRef = useRef<MediaElementAudioSourceNode | null>(null);
+  const visualizationRef = useRef<HTMLDivElement | null>(null);
   
   // Use external refs if provided, otherwise use local refs
   const audioContextRef = externalAudioContextRef || localAudioContextRef;
@@ -146,6 +152,7 @@ const AudioPlayer = ({
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [seekValue, setSeekValue] = useState(0);
+  const [isSeeking, setIsSeeking] = useState(false);
   const [volume, setVolume] = useState(0.75);
   const [pitchShiftEnabled, setPitchShiftEnabled] = useState(false);
   const [pitchValue, setPitchValue] = useState(0);
@@ -154,7 +161,6 @@ const AudioPlayer = ({
   const [bassBoostEnabled, setBassBoostEnabled] = useState(false);
   const [bassBoostAmount, setBassBoostAmount] = useState(6);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
-  const [savedProjectId, setSavedProjectId] = useState<string | null>(null);
   const [projectName, setProjectName] = useState<string>('');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [originalEffectsSettings, setOriginalEffectsSettings] = useState<AudioEffectsSettings | null>(null);
@@ -486,12 +492,10 @@ const AudioPlayer = ({
       
       // Don't show "saved successfully" message for loaded projects
       // Only set savedProjectId without triggering success message
-      setSavedProjectId(null);
       setHasUnsavedChanges(false);
     } else {
       // Reset state for new projects
       setOriginalEffectsSettings(null);
-      setSavedProjectId(null);
       setHasUnsavedChanges(false);
     }
   }, [loadedProject]);
@@ -515,15 +519,50 @@ const AudioPlayer = ({
     }
   };
 
-  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseFloat(e.target.value);
-    setSeekValue(value);
-    const audio = audioRef.current;
-    if (audio) {
-      const time = (value / 100) * duration;
-      audio.currentTime = time;
+  const handleSeek = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
+    if (!visualizationRef.current || !audioRef.current || duration === 0) return;
+
+    const rect = visualizationRef.current.getBoundingClientRect();
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const x = clientX - rect.left;
+    const percentage = Math.max(0, Math.min(100, (x / rect.width) * 100));
+    
+    setSeekValue(percentage);
+    const time = (percentage / 100) * duration;
+    if (isFinite(time)) {
+      audioRef.current.currentTime = time;
       setCurrentTime(time);
     }
+  };
+
+  const handleSeekMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    setIsSeeking(true);
+    handleSeek(e);
+  };
+
+  const handleSeekMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (isSeeking) {
+      handleSeek(e);
+    }
+  };
+
+  const handleSeekMouseUp = () => {
+    setIsSeeking(false);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    setIsSeeking(true);
+    handleSeek(e);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (isSeeking) {
+      handleSeek(e);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setIsSeeking(false);
   };
 
   const formatTime = (t: number) => {
@@ -552,6 +591,30 @@ const AudioPlayer = ({
     setVolume(originalEffectsSettings.volume?.level ?? 0.75);
   };
 
+  const handleTogglePitchShift = () => {
+    const isNowEnabled = !pitchShiftEnabled;
+    setPitchShiftEnabled(isNowEnabled);
+    if (isNowEnabled) {
+      setPitchValue(0);
+    }
+  };
+
+  const handleToggleSpeedControl = () => {
+    const isNowEnabled = !speedControlEnabled;
+    setSpeedControlEnabled(isNowEnabled);
+    if (isNowEnabled) {
+      setSpeedValue(1.0);
+    }
+  };
+
+  const handleToggleBassBoost = () => {
+    const isNowEnabled = !bassBoostEnabled;
+    setBassBoostEnabled(isNowEnabled);
+    if (isNowEnabled) {
+      setBassBoostAmount(6);
+    }
+  };
+
   const getCurrentEffectsSettings = (): AudioEffectsSettings => {
     return {
       bass_boost: {
@@ -577,7 +640,7 @@ const AudioPlayer = ({
   };
 
   const handleSaveComplete = (projectId: string, wasUpdate: boolean = false) => {
-    setSavedProjectId(projectId);
+    onSaveComplete(projectId);
     setHasUnsavedChanges(false);
     
     // Update original settings to current settings after successful save
@@ -655,7 +718,7 @@ const AudioPlayer = ({
   };
 
   return (
-    <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="w-full space-y-6">
       {/* Main Player Card */}
       <Card>
         <CardHeader>
@@ -671,26 +734,22 @@ const AudioPlayer = ({
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Waveform Visualization */}
-          <div className="relative w-full h-20 bg-muted rounded-lg overflow-hidden">
+          <div 
+            ref={visualizationRef}
+            className="relative w-full h-16 bg-muted rounded-lg overflow-hidden cursor-pointer"
+            onMouseDown={handleSeekMouseDown}
+            onMouseMove={handleSeekMouseMove}
+            onMouseUp={handleSeekMouseUp}
+            onMouseLeave={handleSeekMouseUp}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
             <div
-              className="absolute top-0 left-0 h-full bg-primary opacity-30 transition-all duration-100"
-              style={{ width: `${seekValue}%` }}
+              className="absolute top-0 left-0 h-full bg-primary opacity-30"
+              style={{ width: `${seekValue}%`, pointerEvents: 'none' }}
             />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-xs text-muted-foreground">Audio Visualization</div>
-            </div>
           </div>
-
-          {/* Progress Bar */}
-          <input
-            type="range"
-            min={0}
-            max={100}
-            step={0.1}
-            value={seekValue}
-            onChange={handleSeek}
-            className="w-full h-2 bg-muted rounded-full appearance-none cursor-pointer"
-          />
 
           {/* Time Display */}
           <div className="flex justify-between text-sm text-muted-foreground">
@@ -769,33 +828,48 @@ const AudioPlayer = ({
               <Button
                 variant={pitchShiftEnabled ? "default" : "outline"}
                 size="sm"
-                onClick={() => setPitchShiftEnabled(!pitchShiftEnabled)}
+                onClick={handleTogglePitchShift}
               >
                 {pitchShiftEnabled ? "Disable" : "Enable"}
               </Button>
             </div>
             
-            {pitchShiftEnabled && (
-              <div className="space-y-2">
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>-12</span>
-                  <span>0</span>
-                  <span>+12</span>
-                </div>
-                <input
-                  type="range"
-                  min={-12}
-                  max={12}
-                  step={1}
-                  value={pitchValue}
-                  onChange={(e) => setPitchValue(parseFloat(e.target.value))}
-                  className="w-full h-2 bg-muted rounded-full appearance-none cursor-pointer"
-                />
-                <div className="text-center text-xs text-muted-foreground">
-                  Current: {pitchValue > 0 ? '+' : ''}{pitchValue} semitones
-                </div>
-              </div>
-            )}
+            <AnimatePresence>
+              {pitchShiftEnabled && (
+                <motion.div
+                  key="pitch-shift-controls"
+                  initial="collapsed"
+                  animate="open"
+                  exit="collapsed"
+                  variants={{
+                    open: { opacity: 1, height: 'auto' },
+                    collapsed: { opacity: 0, height: 0 },
+                  }}
+                  transition={{ duration: 0.3, ease: [0.04, 0.62, 0.23, 0.98] }}
+                  className="overflow-hidden"
+                >
+                  <div className="space-y-2 pt-2">
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>-12</span>
+                      <span>0</span>
+                      <span>+12</span>
+                    </div>
+                    <input
+                      type="range"
+                      min={-12}
+                      max={12}
+                      step={1}
+                      value={pitchValue}
+                      onChange={(e) => setPitchValue(parseFloat(e.target.value))}
+                      className="w-full h-2 bg-muted rounded-full appearance-none cursor-pointer"
+                    />
+                    <div className="text-center text-xs text-muted-foreground">
+                      Current: {pitchValue > 0 ? '+' : ''}{pitchValue} semitones
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           {/* Speed Control */}
@@ -808,39 +882,54 @@ const AudioPlayer = ({
               <Button
                 variant={speedControlEnabled ? "default" : "outline"}
                 size="sm"
-                onClick={() => setSpeedControlEnabled(!speedControlEnabled)}
+                onClick={handleToggleSpeedControl}
               >
                 {speedControlEnabled ? "Disable" : "Enable"}
               </Button>
             </div>
             
-            {speedControlEnabled && (
-              <div className="space-y-2">
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>0.5x</span>
-                  <span>1x</span>
-                  <span>1.5x</span>
-                </div>
-                <div className="relative">
-                  <input
-                    type="range"
-                    min={0.5}
-                    max={1.5}
-                    step={0.1}
-                    value={speedValue}
-                    onChange={(e) => setSpeedValue(parseFloat(e.target.value))}
-                    className="w-full h-2 bg-muted rounded-full appearance-none cursor-pointer"
-                  />
-                  <div
-                    className="absolute top-1/2 w-0.5 h-3 bg-border -translate-y-1/2 pointer-events-none"
-                    style={{ left: '50%' }}
-                  />
-                </div>
-                <div className="text-center text-xs text-muted-foreground">
-                  Current: {speedValue.toFixed(1)}x
-                </div>
-              </div>
-            )}
+            <AnimatePresence>
+              {speedControlEnabled && (
+                <motion.div
+                  key="speed-control-controls"
+                  initial="collapsed"
+                  animate="open"
+                  exit="collapsed"
+                  variants={{
+                    open: { opacity: 1, height: 'auto' },
+                    collapsed: { opacity: 0, height: 0 },
+                  }}
+                  transition={{ duration: 0.3, ease: [0.04, 0.62, 0.23, 0.98] }}
+                  className="overflow-hidden"
+                >
+                  <div className="space-y-2 pt-2">
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>0.5x</span>
+                      <span>1x</span>
+                      <span>1.5x</span>
+                    </div>
+                    <div className="relative">
+                      <input
+                        type="range"
+                        min={0.5}
+                        max={1.5}
+                        step={0.1}
+                        value={speedValue}
+                        onChange={(e) => setSpeedValue(parseFloat(e.target.value))}
+                        className="w-full h-2 bg-muted rounded-full appearance-none cursor-pointer"
+                      />
+                      <div
+                        className="absolute top-1/2 w-0.5 h-3 bg-border -translate-y-1/2 pointer-events-none"
+                        style={{ left: '50%' }}
+                      />
+                    </div>
+                    <div className="text-center text-xs text-muted-foreground">
+                      Current: {speedValue.toFixed(1)}x
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           {/* Bass Boost Control */}
@@ -853,67 +942,60 @@ const AudioPlayer = ({
               <Button
                 variant={bassBoostEnabled ? "default" : "outline"}
                 size="sm"
-                onClick={() => setBassBoostEnabled(!bassBoostEnabled)}
+                onClick={handleToggleBassBoost}
               >
                 {bassBoostEnabled ? "Disable" : "Enable"}
               </Button>
             </div>
             
-            {bassBoostEnabled && (
-              <div className="space-y-2">
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>0 dB</span>
-                  <span>10 dB</span>
-                  <span>20 dB</span>
-                </div>
-                <input
-                  type="range"
-                  min={0}
-                  max={20}
-                  step={1}
-                  value={bassBoostAmount}
-                  onChange={(e) => setBassBoostAmount(parseFloat(e.target.value))}
-                  className="w-full h-2 bg-muted rounded-full appearance-none cursor-pointer"
-                />
-                <div className="text-center text-xs text-muted-foreground">
-                  Boost: {bassBoostAmount} dB
-                </div>
-              </div>
-            )}
+            <AnimatePresence>
+              {bassBoostEnabled && (
+                <motion.div
+                  key="bass-boost-controls"
+                  initial="collapsed"
+                  animate="open"
+                  exit="collapsed"
+                  variants={{
+                    open: { opacity: 1, height: 'auto' },
+                    collapsed: { opacity: 0, height: 0 },
+                  }}
+                  transition={{ duration: 0.3, ease: [0.04, 0.62, 0.23, 0.98] }}
+                  className="overflow-hidden"
+                >
+                  <div className="space-y-2 pt-2">
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>0 dB</span>
+                      <span>10 dB</span>
+                      <span>20 dB</span>
+                    </div>
+                    <input
+                      type="range"
+                      min={0}
+                      max={20}
+                      step={1}
+                      value={bassBoostAmount}
+                      onChange={(e) => setBassBoostAmount(parseFloat(e.target.value))}
+                      className="w-full h-2 bg-muted rounded-full appearance-none cursor-pointer"
+                    />
+                    <div className="text-center text-xs text-muted-foreground">
+                      Boost: {bassBoostAmount} dB
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
-          {/* Save Project Section */}
-          <div className="pt-4 border-t border-border">
-            <div className="flex justify-center gap-3">
-              <Button
-                onClick={handleSaveProject}
-                variant={hasUnsavedChanges ? "default" : "outline"}
-                size="sm"
-                className={`flex-1 max-w-xs ${!hasUnsavedChanges && loadedProject ? "opacity-50 cursor-not-allowed" : ""}`}
-                disabled={!hasUnsavedChanges && !!loadedProject}
-              >
-                <Save className="h-4 w-4 mr-2" />
-                {loadedProject ? "Update Project" : "Save Project"}
-              </Button>
-            </div>
-            {savedProjectId && (
-              <p className="text-center text-sm text-green-600 mt-2">
-                Project saved successfully!
-              </p>
-            )}
-            {loadedProject && !hasUnsavedChanges && (
-              <p className="text-center text-sm text-muted-foreground mt-2">
-                No changes to save
-              </p>
-            )}
-          </div>
         </CardContent>
       </Card>
 
       {/* Save Project Dialog */}
       <SaveProjectDialog
         isOpen={showSaveDialog}
-        onClose={() => setShowSaveDialog(false)}
+        onClose={() => {
+          setShowSaveDialog(false);
+          onSaveDialogClose?.();
+        }}
         audioFile={audioFile}
         effectsSettings={getCurrentEffectsSettings()}
         onSaveComplete={handleSaveComplete}

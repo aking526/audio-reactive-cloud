@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import AudioUploader from "@/components/studio/AudioUploader";
 import AudioPlayer from "@/components/studio/AudioPlayer";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, AlertCircle } from "lucide-react";
+import { ArrowLeft, AlertCircle, Save } from "lucide-react";
 import Link from "next/link";
 import { AudioProject, audioProjectsService } from '@/lib/supabase/audio-projects';
 import { UnsavedChangesDialog } from '@/components/studio/UnsavedChangesDialog';
@@ -25,6 +25,7 @@ export default function StudioPage() {
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
   const [pendingNavigation, setPendingNavigation] = useState<string | null>(null);
   const [triggerSaveDialog, setTriggerSaveDialog] = useState(false);
+  const [savedProjectId, setSavedProjectId] = useState<string | null>(null);
 
   // Audio context refs (these will be passed to AudioPlayer and AudioAnalyzer)
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -58,6 +59,21 @@ export default function StudioPage() {
     }
   }, [hasUnsavedChanges, router]);
 
+  const handleSaveProject = () => {
+    setTriggerSaveDialog(true);
+  };
+
+  const handleSaveDialogClose = () => {
+    setTriggerSaveDialog(false);
+  };
+
+  const handleSaveCompleteForPlayer = useCallback((projectId: string) => {
+    setSavedProjectId(projectId);
+    setTimeout(() => {
+      setSavedProjectId(null);
+    }, 5000);
+  }, []);
+
   const handleSaveAndNavigate = useCallback(() => {
     // Close the unsaved dialog and trigger the save dialog
     setShowUnsavedDialog(false);
@@ -81,7 +97,8 @@ export default function StudioPage() {
     setPendingNavigation(null);
   }, []);
 
-  const handleSaveCompleteWithNavigation = useCallback((projectId: string) => {
+  const handleSaveCompleteWithNavigation = useCallback((projectId:string) => {
+    handleSaveCompleteForPlayer(projectId);
     // Reset the trigger and navigate to pending destination
     setTriggerSaveDialog(false);
     setHasUnsavedChanges(false);
@@ -92,7 +109,7 @@ export default function StudioPage() {
         setPendingNavigation(null);
       }, 500); // Duration of exit animation
     }
-  }, [pendingNavigation, router]);
+  }, [pendingNavigation, router, handleSaveCompleteForPlayer]);
 
   const handleProjectUpdated = useCallback((projectId: string) => {
     // Navigate to dashboard after project update
@@ -182,7 +199,7 @@ export default function StudioPage() {
     >
       <div className="max-w-7xl mx-auto">
         <header className="mb-8">
-          <div className="flex items-center gap-4 mb-6">
+          <div className="flex items-center justify-between gap-4 mb-6">
             <Button 
               variant="outline" 
               size="sm"
@@ -191,59 +208,79 @@ export default function StudioPage() {
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Dashboard
             </Button>
+            
+            <div className="flex items-center gap-3">
+              {savedProjectId && (
+                <p className="text-sm text-green-600">
+                  Project saved successfully!
+                </p>
+              )}
+              {loadedProject && !hasUnsavedChanges && !savedProjectId && (
+                 <p className="text-sm text-muted-foreground">
+                   No changes to save
+                 </p>
+              )}
+              <Button
+                onClick={handleSaveProject}
+                variant={hasUnsavedChanges ? "default" : "outline"}
+                size="sm"
+                className={`${!hasUnsavedChanges && loadedProject ? "opacity-50 cursor-not-allowed" : ""}`}
+                disabled={!hasUnsavedChanges && !!loadedProject}
+              >
+                <Save className="h-4 w-4 mr-2" />
+                {loadedProject ? "Update Project" : "Save Project"}
+              </Button>
+            </div>
           </div>
 
-          <h1 className="text-4xl font-bold text-foreground mb-2">Audio Studio</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-4xl font-bold text-foreground mb-2 sr-only">Audio Studio</h1>
+          <p className="text-muted-foreground sr-only">
             {loadedProject ? `Editing: ${loadedProject.project_name}` : 'Create and process your audio'}
           </p>
         </header>
 
-        <div className="grid grid-cols-1 gap-6">
-          {/* Left Column - Audio Controls */}
-          <div className="lg:col-span-1 space-y-6">
-            {loadingProject ? (
-              <div className="flex items-center justify-center p-12">
-                <div className="text-center">
-                  <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-                  <p className="text-muted-foreground">Loading project...</p>
-                </div>
+        <div className="space-y-6">
+          {loadingProject ? (
+            <div className="flex items-center justify-center p-12">
+              <div className="text-center">
+                <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                <p className="text-muted-foreground">Loading project...</p>
               </div>
-            ) : loadError ? (
-              <div className="flex items-center justify-center p-12">
-                <div className="text-center">
-                  <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">Failed to Load Project</h3>
-                  <p className="text-muted-foreground mb-4">{loadError}</p>
-                  <Button onClick={handleReset} variant="outline">
-                    <ArrowLeft className="h-4 w-4 mr-2" />
-                    Back to Studio
-                  </Button>
-                </div>
+            </div>
+          ) : loadError ? (
+            <div className="flex items-center justify-center p-12">
+              <div className="text-center">
+                <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">Failed to Load Project</h3>
+                <p className="text-muted-foreground mb-4">{loadError}</p>
+                <Button onClick={handleReset} variant="outline">
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Back to Studio
+                </Button>
               </div>
-            ) : !audioFile ? (
-              <AudioUploader onAudioLoaded={handleAudioLoaded} />
-            ) : (
-              <div className="space-y-6">
-                <AudioPlayer
-                  key={`${audioFile.name}-${audioFile.size}-${loadedProject?.id || 'new'}`}
-                  audioFile={audioFile}
-                  onPlayingChange={setIsPlaying}
-                  audioContextRef={audioContextRef}
-                  sourceNodeRef={sourceNodeRef}
-                  analyserInputNodeRef={analyserInputNodeRef}
-                  loadedProject={loadedProject}
-                  onUnsavedChangesChange={setHasUnsavedChanges}
-                  triggerSaveDialog={triggerSaveDialog}
-                  onSaveCompleteWithNavigation={handleSaveCompleteWithNavigation}
-                  onProjectUpdated={handleProjectUpdated}
-                  onProjectCopied={handleProjectCopied}
-                />
-              </div>
-            )}
-          </div>
-
-          {/* Right Column removed (visualization was removed) */}
+            </div>
+          ) : !audioFile ? (
+            <AudioUploader onAudioLoaded={handleAudioLoaded} />
+          ) : (
+            <div className="space-y-6">
+              <AudioPlayer
+                key={`${audioFile.name}-${audioFile.size}-${loadedProject?.id || 'new'}`}
+                audioFile={audioFile}
+                onPlayingChange={setIsPlaying}
+                audioContextRef={audioContextRef}
+                sourceNodeRef={sourceNodeRef}
+                analyserInputNodeRef={analyserInputNodeRef}
+                loadedProject={loadedProject}
+                onUnsavedChangesChange={setHasUnsavedChanges}
+                triggerSaveDialog={triggerSaveDialog}
+                onSaveCompleteWithNavigation={handleSaveCompleteWithNavigation}
+                onSaveComplete={handleSaveCompleteForPlayer}
+                onProjectUpdated={handleProjectUpdated}
+                onProjectCopied={handleProjectCopied}
+                onSaveDialogClose={handleSaveDialogClose}
+              />
+            </div>
+          )}
         </div>
       </div>
       

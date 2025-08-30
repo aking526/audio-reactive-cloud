@@ -254,7 +254,10 @@ export function SavedProjects({ initialProjects = [], initialError = null, onNav
                       <div className="flex-1 min-w-0">
                         {/* Project Header */}
                         <div className="flex items-center gap-3 mb-2">
-                          <h3 className="font-semibold text-lg truncate">
+                          <h3 
+                            className="font-semibold text-lg truncate cursor-pointer hover:underline"
+                            onClick={() => onNavigate?.(`/studio?project=${project.id}`)}
+                          >
                             {project.project_name}
                           </h3>
                           {activeEffects.length > 0 && (
