@@ -161,42 +161,35 @@ export default function Home() {
           initial={{ opacity: 0, scale: 0.8 }}
           animate={isLoaded ? { opacity: 1, scale: 1 } : {}}
           transition={{ duration: 1.2, ease: "easeOut" }}
-          className="text-6xl md:text-8xl lg:text-9xl xl:text-[12rem] font-bold bg-gradient-to-r from-foreground via-primary to-secondary bg-clip-text text-transparent animate-gradient-x whitespace-nowrap overflow-hidden"
+          className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold bg-gradient-to-r from-foreground via-primary to-secondary bg-clip-text text-transparent animate-gradient-x whitespace-nowrap"
           style={{
             fontStretch: 'ultra-expanded',
-            letterSpacing: '0.2em',
+            letterSpacing: '0.05em',
             lineHeight: '1',
-            transform: 'scaleX(1.2)',
+            transform: 'scaleX(1.05)',
             transformOrigin: 'center',
-            maxWidth: '100vw',
+            width: 'fit-content',
+            maxWidth: 'calc(100vw - 4rem)',
             textAlign: 'center'
           }}
         >
-          AUDIO-REACTIVE CLOUD
+          AUDIO PROCESSING STUDIO
         </motion.h1>
       </div>
 
-      {/* Bottom Right Buttons */}
+      {/* Bottom Right Button */}
       <motion.div
         initial={{ opacity: 0, x: 20 }}
         animate={isLoaded ? { opacity: 1, x: 0 } : {}}
         transition={{ duration: 0.8, delay: 0.6 }}
-        className="fixed bottom-8 right-8 flex flex-col gap-3 z-20"
+        className="fixed bottom-8 right-8 z-20"
       >
         <Button
-          onClick={() => handleNavigate("/auth/sign-up")}
+          onClick={() => handleNavigate("/auth/login")}
           size="lg"
-          className="bg-primary/90 hover:bg-primary backdrop-blur-sm border border-primary/30 shadow-lg"
+          className="bg-primary/90 hover:bg-primary backdrop-blur-sm border border-primary/30 shadow-lg px-8 py-3 text-lg font-semibold"
         >
           Get Started
-        </Button>
-        <Button
-          onClick={() => handleNavigate("/auth/login")}
-          variant="outline"
-          size="lg"
-          className="bg-background/80 hover:bg-background/90 backdrop-blur-sm border border-border/50 shadow-lg"
-        >
-          Sign In
         </Button>
       </motion.div>
     </motion.main>
