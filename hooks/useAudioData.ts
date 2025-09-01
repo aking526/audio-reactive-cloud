@@ -19,8 +19,8 @@ export interface UseAudioDataProps {
 export function useAudioData({ analyserNode, isPlaying, enabled = true }: UseAudioDataProps) {
   const [audioData, setAudioData] = useState<AudioAnalysisData | null>(null);
   const animationFrameRef = useRef<number | null>(null);
-  const frequencyDataRef = useRef<Uint8Array | null>(null);
-  const waveformDataRef = useRef<Uint8Array | null>(null);
+  const frequencyDataRef = useRef<Uint8Array<ArrayBuffer> | null>(null);
+  const waveformDataRef = useRef<Uint8Array<ArrayBuffer> | null>(null);
 
   useEffect(() => {
     if (!analyserNode || !enabled) {
@@ -30,8 +30,8 @@ export function useAudioData({ analyserNode, isPlaying, enabled = true }: UseAud
 
     // Initialize data arrays based on analyser settings
     const bufferLength = analyserNode.frequencyBinCount;
-    frequencyDataRef.current = new Uint8Array(bufferLength);
-    waveformDataRef.current = new Uint8Array(bufferLength);
+    frequencyDataRef.current = new Uint8Array(new ArrayBuffer(bufferLength));
+    waveformDataRef.current = new Uint8Array(new ArrayBuffer(bufferLength));
 
     const updateAudioData = () => {
       if (!analyserNode || !frequencyDataRef.current || !waveformDataRef.current) {

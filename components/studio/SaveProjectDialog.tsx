@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -8,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Save, X, Music, AlertCircle, CheckCircle2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { AudioEffectsSettings, audioProjectsService, validateFileSize, formatFileSize } from '@/lib/supabase/audio-projects';
+import { AudioEffectsSettings, audioProjectsService, validateFileSize } from '@/lib/supabase/audio-projects';
 
 interface SaveProjectDialogProps {
   isOpen: boolean;
@@ -63,9 +64,9 @@ export function SaveProjectDialog({
 
     try {
       let project;
-      const isUpdate = existingProject && !saveAsCopy;
+      const isUpdate: boolean = !!(existingProject && !saveAsCopy);
       
-      if (isUpdate) {
+      if (isUpdate && existingProject) {
         // Update existing project
         setSaveStatus('processing');
         const updateData = {

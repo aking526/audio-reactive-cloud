@@ -1,23 +1,23 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from 'next/navigation';
 import { motion } from "framer-motion";
 import AudioUploader from "@/components/studio/AudioUploader";
 import AudioPlayer from "@/components/studio/AudioPlayer";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, AlertCircle, Save } from "lucide-react";
-import Link from "next/link";
+
 import { AudioProject, audioProjectsService } from '@/lib/supabase/audio-projects';
 import { UnsavedChangesDialog } from '@/components/studio/UnsavedChangesDialog';
 import * as Tone from 'tone';
 
-export default function StudioPage() {
+function StudioPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [isExiting, setIsExiting] = useState(false);
   const [audioFile, setAudioFile] = useState<File | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
+
   const [loadedProject, setLoadedProject] = useState<AudioProject | null>(null);
   const [loadingProject, setLoadingProject] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -111,7 +111,7 @@ export default function StudioPage() {
     }
   }, [pendingNavigation, router, handleSaveCompleteForPlayer]);
 
-  const handleProjectUpdated = useCallback((projectId: string) => {
+  const handleProjectUpdated = useCallback(() => {
     // Navigate to dashboard after project update
     setIsExiting(true);
     setTimeout(() => {
@@ -266,7 +266,7 @@ export default function StudioPage() {
               <AudioPlayer
                 key={`${audioFile.name}-${audioFile.size}-${loadedProject?.id || 'new'}`}
                 audioFile={audioFile}
-                onPlayingChange={setIsPlaying}
+                onPlayingChange={() => {}}
                 audioContextRef={audioContextRef}
                 sourceNodeRef={sourceNodeRef}
                 analyserInputNodeRef={analyserInputNodeRef}
@@ -275,7 +275,7 @@ export default function StudioPage() {
                 triggerSaveDialog={triggerSaveDialog}
                 onSaveCompleteWithNavigation={handleSaveCompleteWithNavigation}
                 onSaveComplete={handleSaveCompleteForPlayer}
-                onProjectUpdated={handleProjectUpdated}
+                onProjectUpdated={() => handleProjectUpdated()}
                 onProjectCopied={handleProjectCopied}
                 onSaveDialogClose={handleSaveDialogClose}
               />
@@ -292,5 +292,13 @@ export default function StudioPage() {
         onDiscard={handleDiscardAndNavigate}
       />
     </motion.div>
+  );
+}
+
+export default function StudioPage() {
+  return (
+    <Suspense fallback={null}>
+      <StudioPageContent />
+    </Suspense>
   );
 }

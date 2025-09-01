@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState, useMemo } from 'react';
+/* eslint-disable react-hooks/exhaustive-deps */
+import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,8 +11,7 @@ import {
   Music, 
   Settings,
   RotateCcw,
-  Undo2,
-  Save
+  Undo2
 } from "lucide-react";
 import { SaveProjectDialog } from './SaveProjectDialog';
 import { AudioEffectsSettings } from '@/lib/supabase/audio-projects';
@@ -423,9 +423,48 @@ const AudioPlayer = ({
   }, [bassBoostEnabled, bassBoostAmount]);
 
   // Check for unsaved changes whenever effects settings change
+  const checkForUnsavedChanges = useCallback(() => {
+    let hasChanges = false;
+    
+    if (!loadedProject || !originalEffectsSettings) {
+      // For new projects, consider any active effects as changes
+      hasChanges = hasActiveEffects();
+    } else {
+      const currentSettings = getCurrentEffectsSettings();
+      
+      // Helper function to compare floating point numbers with small tolerance
+      const isFloatEqual = (a: number, b: number, tolerance = 0.001) => {
+        return Math.abs(a - b) < tolerance;
+      };
+      
+      // Compare current settings with original loaded settings
+      // Since both are now normalized to the same structure, we can safely compare
+      const bassEnabledChanged = currentSettings.bass_boost!.enabled !== originalEffectsSettings.bass_boost!.enabled;
+      const bassAmountChanged = currentSettings.bass_boost!.amount !== originalEffectsSettings.bass_boost!.amount;
+      const speedEnabledChanged = currentSettings.speed_control!.enabled !== originalEffectsSettings.speed_control!.enabled;
+      const speedValueChanged = !isFloatEqual(currentSettings.speed_control!.speed, originalEffectsSettings.speed_control!.speed);
+      const pitchEnabledChanged = currentSettings.pitch_shift!.enabled !== originalEffectsSettings.pitch_shift!.enabled;
+      const pitchValueChanged = currentSettings.pitch_shift!.semitones !== originalEffectsSettings.pitch_shift!.semitones;
+      const volumeChanged = !isFloatEqual(currentSettings.volume!.level, originalEffectsSettings.volume!.level);
+      
+      hasChanges = (
+        bassEnabledChanged ||
+        bassAmountChanged ||
+        speedEnabledChanged ||
+        speedValueChanged ||
+        pitchEnabledChanged ||
+        pitchValueChanged ||
+        volumeChanged
+      );
+    }
+
+    setHasUnsavedChanges(hasChanges);
+    onUnsavedChangesChange?.(hasChanges);
+  }, [bassBoostEnabled, bassBoostAmount, speedControlEnabled, speedValue, pitchShiftEnabled, pitchValue, volume, loadedProject, originalEffectsSettings, onUnsavedChangesChange]);
+
   useEffect(() => {
     checkForUnsavedChanges();
-  }, [bassBoostEnabled, bassBoostAmount, speedControlEnabled, speedValue, pitchShiftEnabled, pitchValue, volume, loadedProject, originalEffectsSettings]);
+  }, [checkForUnsavedChanges]);
 
   // Handle external trigger to open save dialog
   useEffect(() => {
@@ -635,9 +674,7 @@ const AudioPlayer = ({
     };
   };
 
-  const handleSaveProject = () => {
-    setShowSaveDialog(true);
-  };
+  
 
   const handleSaveComplete = (projectId: string, wasUpdate: boolean = false) => {
     onSaveComplete(projectId);
@@ -674,48 +711,9 @@ const AudioPlayer = ({
       id: loadedProject.id,
       project_name: loadedProject.project_name
     } : null;
-  }, [loadedProject?.id, loadedProject?.project_name]);
+  }, [loadedProject]);
 
-  const checkForUnsavedChanges = () => {
-    let hasChanges = false;
-    
-    if (!loadedProject || !originalEffectsSettings) {
-      // For new projects, consider any active effects as changes
-      hasChanges = hasActiveEffects();
-    } else {
-      const currentSettings = getCurrentEffectsSettings();
-      
-      // Helper function to compare floating point numbers with small tolerance
-      const isFloatEqual = (a: number, b: number, tolerance = 0.001) => {
-        return Math.abs(a - b) < tolerance;
-      };
-      
-      // Compare current settings with original loaded settings
-      // Since both are now normalized to the same structure, we can safely compare
-      const bassEnabledChanged = currentSettings.bass_boost!.enabled !== originalEffectsSettings.bass_boost!.enabled;
-      const bassAmountChanged = currentSettings.bass_boost!.amount !== originalEffectsSettings.bass_boost!.amount;
-      const speedEnabledChanged = currentSettings.speed_control!.enabled !== originalEffectsSettings.speed_control!.enabled;
-      const speedValueChanged = !isFloatEqual(currentSettings.speed_control!.speed, originalEffectsSettings.speed_control!.speed);
-      const pitchEnabledChanged = currentSettings.pitch_shift!.enabled !== originalEffectsSettings.pitch_shift!.enabled;
-      const pitchValueChanged = currentSettings.pitch_shift!.semitones !== originalEffectsSettings.pitch_shift!.semitones;
-      const volumeChanged = !isFloatEqual(currentSettings.volume!.level, originalEffectsSettings.volume!.level);
-      
-      hasChanges = (
-        bassEnabledChanged ||
-        bassAmountChanged ||
-        speedEnabledChanged ||
-        speedValueChanged ||
-        pitchEnabledChanged ||
-        pitchValueChanged ||
-        volumeChanged
-      );
-      
 
-    }
-
-    setHasUnsavedChanges(hasChanges);
-    onUnsavedChangesChange?.(hasChanges);
-  };
 
   return (
     <div className="w-full space-y-6">

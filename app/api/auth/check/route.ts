@@ -10,7 +10,7 @@ export async function GET() {
     return NextResponse.json({
       authenticated: !!user
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json({
       authenticated: false,
       error: "Failed to check authentication"

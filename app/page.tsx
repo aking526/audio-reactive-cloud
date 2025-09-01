@@ -32,7 +32,7 @@ export default function Home() {
             router.push('/dashboard');
           }
         }
-      } catch (error) {
+      } catch {
         // If there's an error checking auth, stay on landing page
         console.log('Auth check failed, staying on landing page');
       }

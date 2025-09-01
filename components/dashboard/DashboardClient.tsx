@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, easeOut } from "framer-motion";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -11,14 +11,14 @@ import { AudioProject } from "@/lib/supabase/audio-projects";
 import { UserDropdown } from "@/components/user-dropdown";
 
 interface DashboardClientProps {
-  user: any;
+  userEmail: string;
   projects: AudioProject[];
   projectsError: string | null;
 }
 
 //
 
-export function DashboardClient({ user, projects, projectsError }: DashboardClientProps) {
+export function DashboardClient({ userEmail, projects, projectsError }: DashboardClientProps) {
   const [isExiting, setIsExiting] = useState(false);
   const router = useRouter();
 
@@ -46,7 +46,7 @@ export function DashboardClient({ user, projects, projectsError }: DashboardClie
       y: 0,
       transition: {
         duration: 0.6,
-        ease: "easeOut"
+        ease: easeOut
       }
     }
   };
@@ -87,7 +87,7 @@ export function DashboardClient({ user, projects, projectsError }: DashboardClie
             <Plus className="h-4 w-4 mr-2 group-hover:text-primary transition-colors" />
             Create New Project
           </Button>
-          <UserDropdown userEmail={user.email} />
+          <UserDropdown userEmail={userEmail} />
         </div>
       </div>
       

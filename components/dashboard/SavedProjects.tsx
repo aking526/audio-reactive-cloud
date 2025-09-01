@@ -216,6 +216,9 @@ export function SavedProjects({ initialProjects = [], initialError = null, onNav
     }
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const itemVariantsForMotion = itemVariants as any;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -237,7 +240,7 @@ export function SavedProjects({ initialProjects = [], initialError = null, onNav
             return (
               <motion.div
                 key={project.id}
-                variants={itemVariants}
+                variants={itemVariantsForMotion}
                 initial="hidden"
                 animate="visible"
                 exit={{ opacity: 0, y: -8, scale: 0.98, transition: { duration: 0.2 } }}

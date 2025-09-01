@@ -64,7 +64,7 @@ class AudioProjectsService {
     const fileExtension = file.name.split('.').pop() || 'mp3';
     const fileName = `${userId}/${projectId}_${fileType}.${fileExtension}`;
 
-    const { data, error } = await this.supabase.storage
+    const { error } = await this.supabase.storage
       .from(bucket)
       .upload(fileName, file, {
         cacheControl: '3600',

@@ -6,6 +6,8 @@ Email: [aking1@seas.upenn.edu](mailto:aking1@seas.upenn.edu)
 
 ## Description
 
+This project is a web-based Audio Processing Studio designed for creating audio-reactive visualizations. Users can upload their own audio files, manipulate them with a variety of controls, and see the visualizations react in real time. The platform allows for saving projects to the cloud, so users can revisit and continue their work at any time. This application is built with a modern technology stack including Next.js, React, Supabase for the backend and database, and Tone.js for powerful audio processing capabilities.
+
 ## Features
 
 ## Assement Criteria
