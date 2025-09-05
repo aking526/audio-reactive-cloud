@@ -202,39 +202,54 @@ class AudioProjectsService {
   async deleteProject(projectId: string): Promise<void> {
     // First, get the project to find the file URLs
     const project = await this.getProject(projectId);
-    if (!project) {
-      throw new Error('Project not found');
+    
+    // If project doesn't exist, it might have already been deleted
+    // We should still try to clean up any remaining files and database records
+    if (project) {
+      // Delete files from storage
+      const { data: { user } } = await this.supabase.auth.getUser();
+      if (user) {
+        // Delete original file
+        if (project.original_file_url) {
+          const originalFileName = `${user.id}/${projectId}_original.${project.original_filename.split('.').pop()}`;
+          try {
+            await this.supabase.storage
+              .from('audio-files-original')
+              .remove([originalFileName]);
+          } catch (error) {
+            console.warn('Failed to delete original file:', error);
+            // Continue with deletion even if file removal fails
+          }
+        }
+
+        // Delete processed file if it exists
+        if (project.processed_file_url) {
+          const processedFileName = `${user.id}/${projectId}_processed.${project.original_filename.split('.').pop()}`;
+          try {
+            await this.supabase.storage
+              .from('audio-files-processed')
+              .remove([processedFileName]);
+          } catch (error) {
+            console.warn('Failed to delete processed file:', error);
+            // Continue with deletion even if file removal fails
+          }
+        }
+      }
     }
 
-    // Delete files from storage
-    const { data: { user } } = await this.supabase.auth.getUser();
-    if (user) {
-      // Delete original file
-      if (project.original_file_url) {
-        const originalFileName = `${user.id}/${projectId}_original.${project.original_filename.split('.').pop()}`;
-        await this.supabase.storage
-          .from('audio-files-original')
-          .remove([originalFileName]);
-      }
-
-      // Delete processed file if it exists
-      if (project.processed_file_url) {
-        const processedFileName = `${user.id}/${projectId}_processed.${project.original_filename.split('.').pop()}`;
-        await this.supabase.storage
-          .from('audio-files-processed')
-          .remove([processedFileName]);
-      }
-    }
-
-    // Delete the project record
+    // Always attempt to delete the project record, even if project wasn't found above
     const { error } = await this.supabase
       .from('audio_projects')
       .delete()
       .eq('id', projectId);
 
-    if (error) {
+    // Only throw an error if the database deletion fails with a real error
+    // (not just "no rows affected" which would happen if already deleted)
+    if (error && error.code !== 'PGRST116') {
       throw new Error(`Failed to delete project: ${error.message}`);
     }
+    
+    // If we reach here, the deletion was successful or the project was already gone
   }
 
   /**

@@ -73,12 +73,27 @@ function StudioPageContent() {
     setTriggerSaveDialog(false);
   };
 
-  const handleSaveCompleteForPlayer = useCallback((projectId: string) => {
+  const handleSaveCompleteForPlayer = useCallback(async (projectId: string) => {
     setSavedProjectId(projectId);
+    
+    // Load the newly saved project to update the app state
+    try {
+      const project = await audioProjectsService.getProject(projectId);
+      if (project) {
+        setLoadedProject(project);
+        // Update the URL to reflect the saved project
+        router.replace(`/studio?project=${projectId}`);
+        // Update the loaded project ref to prevent duplicate loads
+        loadedProjectIdRef.current = projectId;
+      }
+    } catch (error) {
+      console.error('Error loading saved project:', error);
+    }
+    
     setTimeout(() => {
       setSavedProjectId(null);
     }, 5000);
-  }, []);
+  }, [router]);
 
   const handleSaveAndNavigate = useCallback(() => {
     // Close the unsaved dialog and trigger the save dialog

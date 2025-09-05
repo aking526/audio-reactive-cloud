@@ -15,6 +15,7 @@ import {
   Plus
 } from "lucide-react";
 import { AudioProject, audioProjectsService, formatFileSize } from '@/lib/supabase/audio-projects';
+import { DeleteProjectDialog } from '@/components/studio/DeleteProjectDialog';
 
 interface SavedProjectsProps {
   initialProjects?: AudioProject[];
@@ -27,6 +28,8 @@ export function SavedProjects({ initialProjects = [], initialError = null, onNav
   const [loading, setLoading] = useState(false); // Start with false since we have initial data
   const [error, setError] = useState<string | null>(initialError);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [projectToDelete, setProjectToDelete] = useState<AudioProject | null>(null);
 
   useEffect(() => {
     // Only load projects if we don't have initial data and there's no initial error
@@ -47,20 +50,47 @@ export function SavedProjects({ initialProjects = [], initialError = null, onNav
     }
   };
 
-  const handleDeleteProject = async (projectId: string, projectName: string) => {
-    if (!confirm(`Are you sure you want to delete "${projectName}"? This action cannot be undone.`)) {
-      return;
-    }
+  const handleDeleteProject = (project: AudioProject) => {
+    setProjectToDelete(project);
+    setShowDeleteDialog(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!projectToDelete) return;
+
+    const projectId = projectToDelete.id;
+    
+    // Close dialog immediately to provide instant feedback
+    setShowDeleteDialog(false);
+    setDeletingId(projectId);
 
     try {
-      setDeletingId(projectId);
       await audioProjectsService.deleteProject(projectId);
+      
+      // Remove from UI after successful deletion
       setProjects(projects.filter(p => p.id !== projectId));
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to delete project');
+      console.error('Failed to delete project:', err);
+      
+      // If deletion failed, we should restore the project in the UI
+      // since we optimistically removed the dialog
+      const errorMessage = err instanceof Error ? err.message : 'Failed to delete project';
+      
+      // Only show error if it's not a "project not found" error
+      // (which could happen if project was already deleted)
+      if (!errorMessage.includes('Project not found')) {
+        alert(errorMessage);
+      }
+      // If it's "Project not found", we still remove it from UI since it's effectively deleted
     } finally {
       setDeletingId(null);
+      setProjectToDelete(null);
     }
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteDialog(false);
+    setProjectToDelete(null);
   };
 
 
@@ -343,7 +373,7 @@ export function SavedProjects({ initialProjects = [], initialError = null, onNav
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => handleDeleteProject(project.id, project.project_name)}
+                            onClick={() => handleDeleteProject(project)}
                             disabled={deletingId === project.id}
                           >
                             {deletingId === project.id ? (
@@ -369,6 +399,15 @@ export function SavedProjects({ initialProjects = [], initialError = null, onNav
       </motion.div>
 
       {/* Create New Project button moved to header */}
+      
+      {/* Delete Project Dialog */}
+      <DeleteProjectDialog
+        isOpen={showDeleteDialog}
+        onClose={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+        project={projectToDelete}
+        isDeleting={!!deletingId}
+      />
     </motion.div>
   );
 }
