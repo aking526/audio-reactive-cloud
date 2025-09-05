@@ -30,9 +30,11 @@ This project is a web-based Audio Processing Studio. Users can upload their own 
 
 ## User Guide
 
-Video Demo:
+The website is publicly accessible at [https://audio-processing-studio.vercel.app/](https://audio-processing-studio.vercel.app/).
 
-Check out more details in the [User Guide](./USER_GUIDE.md).
+Check out the video walkthrough of the project [here](https://drive.google.com/file/d/1xe7UChLOoBqa04WdxPFm34XOm6HUmLBj/view?usp=sharing).
+
+More details can be found in the [User Guide](./USER_GUIDE.md).
 
 ## Future Directions
 I spent around 5 hours to complete this project. I would like to add more features to the project in the future. Here are some ideas that I had:
