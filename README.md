@@ -29,10 +29,19 @@ This project is a web-based Audio Processing Studio. Users can upload their own 
 | ✅ | Integration with database | The application uses Supabase's PostgreSQL database and storage buckets to store user data and audio projects. The files in `lib/supabase/` manage database interactions.  |
 | ✅ | Classes and objects | While the project predominantly uses a functional programming style with React Hooks, it utilizes custom classes and objects such as the `PitchShifter` class which is used for real-time audio processing. |
 
-## Demo
+## User Guide
 
+Video Demo:
+
+Check out more details in the [User Guide](./USER_GUIDE.md).
 
 ## Future Directions
+I spent around 5 hours to complete this project. I would like to add more features to the project in the future. Here are some ideas that I had:
+
+- Add more audio effects, e.g. EQ, compression, reverb, delay, etc.
+- Add more complex sound visualizations, e.g. 3D visualizations using [React Three Fiber](https://github.com/pmndrs/react-three-fiber).
+- Export visualizations as video files.
+- Real-time collaboration on projects.
 
 ---
 

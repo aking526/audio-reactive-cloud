@@ -14,6 +14,8 @@ Click on the **Upload File** tab and drag & drop your audio file or click to bro
 - AAC
 - FLAC
 
+You can also download an mp3 sample song from the [`mp3-files` folder](./mp3-files).
+
 ### 2. Use Sample Songs
 
 Click on the **Sample Songs** tab to choose from our curated collection of sample audio files. This is perfect for:
