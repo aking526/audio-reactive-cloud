@@ -427,8 +427,8 @@ const AudioPlayer = ({
     let hasChanges = false;
     
     if (!loadedProject || !originalEffectsSettings) {
-      // For new projects, consider any active effects as changes
-      hasChanges = hasActiveEffects();
+      // For new projects, always treat as having unsaved changes (the uploaded file itself is a change)
+      hasChanges = true;
     } else {
       const currentSettings = getCurrentEffectsSettings();
       
@@ -535,7 +535,7 @@ const AudioPlayer = ({
     } else {
       // Reset state for new projects
       setOriginalEffectsSettings(null);
-      setHasUnsavedChanges(false);
+      // Note: hasUnsavedChanges will be set by checkForUnsavedChanges() for new projects
     }
   }, [loadedProject]);
 
@@ -722,11 +722,15 @@ const AudioPlayer = ({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Music className="h-5 w-5" />
-            {projectName ? `${projectName}` : 'Audio Player'}
+            {projectName ? `${projectName}` : 'Untitled project'}
           </CardTitle>
-          {projectName && (
+          {projectName ? (
             <p className="text-sm text-muted-foreground">
               Loaded project • {audioFile.name}
+            </p>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              {audioFile.name}
             </p>
           )}
         </CardHeader>

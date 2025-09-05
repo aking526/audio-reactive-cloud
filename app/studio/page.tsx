@@ -4,9 +4,10 @@ import { useState, useRef, useCallback, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from 'next/navigation';
 import { motion } from "framer-motion";
 import AudioUploader from "@/components/studio/AudioUploader";
+import SampleSongSelector from "@/components/studio/SampleSongSelector";
 import AudioPlayer from "@/components/studio/AudioPlayer";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, AlertCircle, Save } from "lucide-react";
+import { ArrowLeft, AlertCircle, Save, Upload, Music } from "lucide-react";
 
 import { AudioProject, audioProjectsService } from '@/lib/supabase/audio-projects';
 import { UnsavedChangesDialog } from '@/components/studio/UnsavedChangesDialog';
@@ -17,6 +18,7 @@ function StudioPageContent() {
   const router = useRouter();
   const [isExiting, setIsExiting] = useState(false);
   const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [audioSource, setAudioSource] = useState<'upload' | 'sample'>('upload');
 
   const [loadedProject, setLoadedProject] = useState<AudioProject | null>(null);
   const [loadingProject, setLoadingProject] = useState(false);
@@ -36,6 +38,10 @@ function StudioPageContent() {
   const loadedProjectIdRef = useRef<string | null>(null);
 
   const handleAudioLoaded = useCallback((buffer: Tone.ToneAudioBuffer | null, file: File) => {
+    setAudioFile(file);
+  }, []);
+
+  const handleSampleSongSelected = useCallback((file: File) => {
     setAudioFile(file);
   }, []);
   const handleReset = useCallback(() => {
@@ -260,7 +266,38 @@ function StudioPageContent() {
               </div>
             </div>
           ) : !audioFile ? (
-            <AudioUploader onAudioLoaded={handleAudioLoaded} />
+            <div className="space-y-6">
+              {/* Audio Source Selection */}
+              <div className="flex justify-center">
+                <div className="flex bg-muted rounded-lg p-1">
+                  <Button
+                    variant={audioSource === 'upload' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setAudioSource('upload')}
+                    className="flex items-center gap-2"
+                  >
+                    <Upload className="h-4 w-4" />
+                    Upload File
+                  </Button>
+                  <Button
+                    variant={audioSource === 'sample' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setAudioSource('sample')}
+                    className="flex items-center gap-2"
+                  >
+                    <Music className="h-4 w-4" />
+                    Sample Songs
+                  </Button>
+                </div>
+              </div>
+
+              {/* Content based on selection */}
+              {audioSource === 'upload' ? (
+                <AudioUploader onAudioLoaded={handleAudioLoaded} />
+              ) : (
+                <SampleSongSelector onSongSelected={handleSampleSongSelected} />
+              )}
+            </div>
           ) : (
             <div className="space-y-6">
               <AudioPlayer

@@ -21,6 +21,12 @@ After running the SQL migration (`supabase-migration.sql`), you need to complete
 - File size limit: `100 MB` (or adjust based on your needs)
 - Allowed MIME types: `audio/*`
 
+**Bucket 3: `sample-songs`**
+- Name: `sample-songs`
+- Public: `true` (public bucket for sample songs)
+- File size limit: `100 MB` (or adjust based on your needs)
+- Allowed MIME types: `audio/*`
+
 ### Configure Storage Policies
 
 For each bucket, you need to create RLS policies. Go to **Storage** → **Policies** and create the following:
@@ -92,6 +98,14 @@ FOR DELETE USING (
 );
 ```
 
+#### For `sample-songs` bucket:
+
+**Policy 1: "Public read access for sample songs"**
+```sql
+CREATE POLICY "Public read access for sample songs" ON storage.objects
+FOR SELECT USING (bucket_id = 'sample-songs');
+```
+
 ## 2. File Organization Structure
 
 Files will be organized in storage with the following structure:
@@ -105,6 +119,12 @@ audio-files-processed/
 ├── {user_id}/
 │   ├── {project_id}_processed.{extension}
 │   └── ...
+
+sample-songs/
+├── song1.mp3
+├── song2.wav
+├── song3.m4a
+└── ...
 ```
 
 ## 3. Verify Database Tables
