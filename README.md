@@ -23,7 +23,7 @@ This project is a web-based Audio Processing Studio. Users can upload their own 
 | Included| Criteria | Details |
 |----------|--------------------|---------|
 | ✅ | Components | The project is built with React and Next.js, with a component-based architecture. Components are located in the `components/` directory. |
-| ✅ | Animations |  |
+| ✅ | Animations | The project uses `framer-motion` for UI animations like page transitions and list animations. It also uses `tailwindcss-animate` for subtle component animations. The audio visualizations are a core feature, reacting to the audio in real time. |
 | ✅ | User registration / login / logout functionality | User authentication is implemented using Supabase Auth. The UI for sign-up, login, and password management is in `app/auth/`. |
 | ✅ | Linking together a frontend framework with a backend framework (eg: React with Node) | Next.js is used as a full-stack framework. It renders React components on the server (Server Components) and on the client. |
 | ✅ | Integration with database | The application uses Supabase's PostgreSQL database and storage buckets to store user data and audio projects. The files in `lib/supabase/` manage database interactions.  |
