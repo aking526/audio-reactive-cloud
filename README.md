@@ -30,7 +30,7 @@ This project is a web-based Audio Processing Studio. Users can upload their own 
 
 ## User Guide
 
-The website is publicly accessible at [audio-reactive-cloud.vercel.app/](https://audio-reactive-cloud.vercel.app/).
+The website is publicly accessible at [audio-reactive-cloud.vercel.app](https://audio-reactive-cloud.vercel.app/).
 
 Check out the video walkthrough of the project [here](https://drive.google.com/file/d/1xe7UChLOoBqa04WdxPFm34XOm6HUmLBj/view?usp=sharing).
 
