@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { getURL } from "@/lib/utils";
 
 export function SignUpForm({
   className,
@@ -43,6 +44,9 @@ export function SignUpForm({
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          emailRedirectTo: `${getURL()}auth/callback`,
+        },
       });
       
       if (error) throw error;
