@@ -921,10 +921,6 @@ const AudioPlayer = ({
                         onChange={(e) => setSpeedValue(parseFloat(e.target.value))}
                         className="w-full h-2 bg-muted rounded-full appearance-none cursor-pointer"
                       />
-                      <div
-                        className="absolute top-1/2 w-0.5 h-3 bg-border -translate-y-1/2 pointer-events-none"
-                        style={{ left: '50%' }}
-                      />
                     </div>
                     <div className="text-center text-xs text-muted-foreground">
                       Current: {speedValue.toFixed(1)}x
