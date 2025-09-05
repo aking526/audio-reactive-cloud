@@ -1,4 +1,5 @@
-# Audio Processing Studio 
+# Audio Processing Studio
+![Screenshot of the Audio Processing Studio](studio_screenshot.png)
 
 Author: Alistair King
 
@@ -6,9 +7,16 @@ Email: [aking1@seas.upenn.edu](mailto:aking1@seas.upenn.edu)
 
 ## Description
 
-This project is a web-based Audio Processing Studio. Users can upload their own audio files and manipulate them with a variety of controls in real time. The platform allows for saving projects to the cloud, so users can revisit and continue their work at any time. This application is built with a modern technology stack including Next.js, React, Supabase for the backend and database, and Tone.js for powerful audio processing capabilities.
+This project is a web-based Audio Processing Studio. Users can upload their own audio files and manipulate them with a variety of controls in real time. The platform allows for saving projects to the cloud, so users can revisit and continue their work at any time. This application is built with a modern technology stack including [Next.js](https://nextjs.org/), [React](https://react.dev/), [Supabase](https://supabase.com/) for the backend and database, and [Tone.js](https://tonejs.github.io/) for powerful audio processing capabilities.
 
 ## Features
+
+- **Audio Upload and Selection:** Upload your own audio files or choose from a selection of sample songs to get started quickly.
+- **Real-time Audio Visualization:** See your audio come to life with dynamic, real-time visualizations that react to the music.
+- **Parameter Control:** Fine-tune the audio-visual experience with a comprehensive set of controls for various audio effects and visual parameters.
+- **Project Management:** Save your creations to the cloud. Your projects are automatically associated with your account, so you can access them anytime.
+- **User Authentication:** Secure user authentication system for managing personal accounts and projects, powered by Supabase Auth.
+- **Modern Tech Stack:** Built with Next.js for a fast and responsive user experience, Supabase for backend services, and a component-based architecture for maintainability.
 
 ## Assement Criteria
 
@@ -20,6 +28,9 @@ This project is a web-based Audio Processing Studio. Users can upload their own 
 | ✅ | Linking together a frontend framework with a backend framework (eg: React with Node) | Next.js is used as a full-stack framework. It renders React components on the server (Server Components) and on the client. |
 | ✅ | Integration with database | The application uses Supabase's PostgreSQL database and storage buckets to store user data and audio projects. The files in `lib/supabase/` manage database interactions.  |
 | ✅ | Classes and objects | While the project predominantly uses a functional programming style with React Hooks, it utilizes custom classes and objects such as the `PitchShifter` class which is used for real-time audio processing. |
+
+## Demo
+
 
 ## Future Directions
 
