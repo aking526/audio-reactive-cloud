@@ -139,7 +139,7 @@ class SampleSongsService {
         ];
         
         // Common music terms that should be properly capitalized
-        const properCaseWords = {
+        const properCaseWords: { [key: string]: string } = {
           'remix': 'Remix',
           'edit': 'Edit', 
           'mix': 'Mix',
